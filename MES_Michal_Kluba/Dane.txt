@@ -1,0 +1,15 @@
+4
+5
+-150
+2
+50
+10
+400
+
+#1 Liczba elementow
+#2 Dlugosc calkowita elementu
+#3 Strumien
+#4 Przekroj
+#5 Wspolczynnik k
+#6 Alfa
+#7 Temperatura otoczenia

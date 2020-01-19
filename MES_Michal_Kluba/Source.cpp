@@ -1,5 +1,7 @@
 #include "GaussSolver.h"
 #include <iostream>
+#include <fstream>
+#include <string>
 
 using namespace std;
 
@@ -82,8 +84,8 @@ struct Element {
 		P[0] = 0;
 		P[1] = 0;
 
-		if (wezly[0].stan == LEWY_WARUNEK_BRZEGOWY) P[0] = q * s;
-		if (wezly[1].stan == PRAWY_WARUNEK_BRZEGOWY) P[1] = -a * s * tx;
+		if (wezly[0].stan == LEWY_WARUNEK_BRZEGOWY) P[0] = -q * s;
+		if (wezly[1].stan == PRAWY_WARUNEK_BRZEGOWY) P[1] = a * s * tx;
 	}
 };
 
@@ -95,15 +97,19 @@ struct Siatka {
 	double* tempWezla;			//wynik temperatury na danym wezle;
 	DaneGlobalne dane;			//dane
 
+	Siatka() {
+		//Konstruktor domyslny
+	}
+
 	//Budowanie siatki MES
 	Siatka(DaneGlobalne dane) {
 		this->dane = dane;
-		Stan stan;
 
 		wezly = new Wezel[dane.liczbaWezlow];
 		for (int i = 0; i < dane.liczbaWezlow; i++) {
+			Stan stan;
 			stan = BRAK_WARUNKU_BRZEGOWEGO;
-			if (i == 0) stan == LEWY_WARUNEK_BRZEGOWY;
+			if (i == 0) stan = LEWY_WARUNEK_BRZEGOWY;
 			if (i == dane.liczbaWezlow - 1) stan = PRAWY_WARUNEK_BRZEGOWY;
 			wezly[i] = Wezel(i, i, stan);
 		}
@@ -162,7 +168,7 @@ struct Siatka {
 		}
 
 		//Wypelnianie wektora odpowiednimi wartosciami
-		for (int i = 0; i < wymiar; i++) {
+		for (int i = 0; i < dane.liczbaElementow; i++) {
 			P[i] += elementy[i].P[0];
 			P[i + 1] += elementy[i].P[1];
 		}
@@ -191,9 +197,9 @@ double* obliczMES(double n, double l, double q, double s, double k, double a, do
 	cout << "Ilosc elementow = " << n << endl;
 	cout << "Ilosc wezlow = " << n + 1 << endl;
 	cout << "Dlugosc calego elementu (l) = " << l << endl;
-	cout << "Dlugosc pojedynczego elementu (l) = " << l/n << endl;
+	cout << "Dlugosc pojedynczego elementu = " << l/n << endl << endl;
 
-	cout << "-------------------- Rozwiazanie MES --------------------" << endl;
+	cout << "--------------------- Rozwiazanie MES ---------------------" << endl;
 	DaneGlobalne daneGlobalne(n, l, q, s, k, a, tx);
 	Siatka siatka(daneGlobalne);
 	siatka.obliczanieMacierzyLokalnej();
@@ -204,9 +210,37 @@ double* obliczMES(double n, double l, double q, double s, double k, double a, do
 	return GaussSolver::solve(siatka.macierzGlobalna(), siatka.wektorGlobalny(), siatka.liczbaWezlow());
 }
 
+void wyswietlTemperatury(double* wynikMES, int n) {
+	cout << "-------------------- Temperatury wezlow --------------------" << endl;
+	for (int i = 0; i < n + 1; i++) {
+		cout << "T" << i + 1 << ": " << wynikMES[i] << endl;
+	}
+}
 
 int main() {
-	cout << "Hello world";
+	int n;
+	double l;
+	double q;
+	double k;
+	double s;
+	double a;
+	double tx;
+
+	ifstream plik;
+	plik.open("Dane.txt", ios::in);
+	if (!plik.good()) cout << "Nie mozna otworzyc pliku!" << endl;
+	plik >> n;
+	plik >> l;
+	plik >> q;
+	plik >> s;
+	plik >> k;
+	plik >> a;
+	plik >> tx;
+	plik.close();
+
+	double* wynikMES;
+	wynikMES = obliczMES(n, l, q, s, k, a, tx);
+	wyswietlTemperatury(wynikMES, n);
 
 	return 0;
 }
